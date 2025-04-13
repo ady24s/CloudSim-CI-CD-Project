@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 College Result Traffic Simulator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9fbfd;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      margin: 5px;
+    }
+
+    input {
+      width: 60%;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #2e86de;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2167b3;
+    }
+
+    #output {
+      margin-top: 20px;
+      text-align: left;
+      font-family: monospace;
+      background-color: #f0f0f0;
+      padding: 15px;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    #autoscale-msg {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #2ecc71;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📄 College Result Portal with CloudSim Autoscaling</h2>
+
+  <div class="card">
+    <input type="text" id="roll" placeholder="Enter Roll Number" />
+    <br />
+    <button onclick="checkResult()">Check Result</button>
+    <button onclick="simulateTraffic()">💥 Simulate 100 Users</button>
+    <button onclick="runSimulation()">🚀 Run Backend Simulation</button>
+
+    <div id="output">🔔 Output will appear here...</div>
+    <div id="autoscale-msg"></div>
+  </div>
+
+  <script>
+    function checkResult() {
+      const roll = document.getElementById('roll').value || "Unknown";
+      const marks = Math.floor(Math.random() * 101);
+      const grade = marks >= 90 ? "A" : marks >= 75 ? "B" : marks >= 60 ? "C" : "D";
+      document.getElementById("output").innerText = `🎓 Result for Roll No ${roll}\nMarks: ${marks}\nGrade: ${grade}`;
+      document.getElementById("autoscale-msg").innerText = "";
+    }
+
+    function simulateTraffic() {
+      const output = document.getElementById("output");
+      const scaleMsg = document.getElementById("autoscale-msg");
+      output.innerText = "📡 Simulating 100 students...\n";
+      scaleMsg.innerText = "";
+
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i >= 100) {
+          clearInterval(interval);
+          return;
+        }
+        const roll = `ROLL${1000 + i}`;
+        document.getElementById("roll").value = roll;
+        checkResult();
+        i++;
+      }, 30);
+    }
+
+    async function runSimulation() {
+      const output = document.getElementById("output");
+      const scaleMsg = document.getElementById("autoscale-msg");
+      output.innerText = "⏳ Backend simulation started...\n";
+      scaleMsg.innerText = "";
+
+      try {
+        const res = await fetch("http://localhost:8000/simulate");
+        const data = await res.json();
+        output.innerText = "✅ Backend simulation complete:\n\n" + data.output;
+
+        if (data.output.includes("extra VMs")) {
+          scaleMsg.style.color = "red";
+          scaleMsg.innerText = "📈 Auto-scaling triggered: Extra VMs were added!";
+        } else if (data.output.includes("Load of")) {
+          scaleMsg.style.color = "green";
+          scaleMsg.innerText = "🟢 Load handled efficiently by existing VMs.";
+        }
+      } catch (err) {
+        output.innerText = "❌ Error running simulation:\n" + err;
+      }
+    }
+  </script>
+</body>
+</html>
